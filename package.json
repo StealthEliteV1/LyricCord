@@ -20,7 +20,7 @@
     "start": "tsc && electron .",
     "build": "tsc",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder --win portable"
   },
   "build": {
     "appId": "com.lyriccord.app",
@@ -36,18 +36,17 @@
     ],
     "win": {
       "target": "portable",
+      "icon": "icons/icon.ico",
       "sign": null,
-      "icon": "icons/icon.ico"
+      "signDlls": false,
+      "signAndEditExecutable": false
     },
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage"
-    }
+    "asar": false,
+    "forceCodeSigning": false,
+    "npmRebuild": false
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "Discord status updater with song lyrics"
 }

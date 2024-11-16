@@ -9,6 +9,9 @@ directories:
 win:
   target: portable
   sign: false
+  signAndEditExecutable: false
+  signDlls: false
   icon: "icons/icon.ico"
 asar: false
 forceCodeSigning: false
+npmRebuild: false
