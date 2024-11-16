@@ -6,7 +6,7 @@
 
 LyricCord is a desktop application that lets you display song lyrics in your Discord status! Watch as your status dynamically cycles through the lyrics of your favorite songs.
 
-![LyricCord Demo](demo.gif)
+![LyricCord Demo](https://i.imgur.com/IZs2hA1.gif)
 
 ### Download & Install
 Download the latest version from the [Releases](https://github.com/YOUR_USERNAME/LyricCord/releases) page and run the application.
@@ -66,7 +66,7 @@ Download the latest version from the [Releases](https://github.com/YOUR_USERNAME
 ### Development Setup
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/LyricCord.git
+git clone https://github.com/StealthEliteV1/LyricCord.git
 cd LyricCord
 ```
 
