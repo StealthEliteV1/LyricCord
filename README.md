@@ -3,6 +3,7 @@
 ⚠️ **IMPORTANT DISCLAIMER** ⚠️
 > This application uses user tokens and automated status updates, which are **against Discord's Terms of Service**. Using this application may result in account termination or other actions from Discord. This project is for **educational purposes only**. Use at your own risk. The developers are not responsible for any consequences that may arise from using this application.
 
+
 LyricCord is a desktop application that lets you display song lyrics in your Discord status! Watch as your status dynamically cycles through the lyrics of your favorite songs.
 
 ![LyricCord Demo](demo.gif)
