@@ -1,0 +1,11 @@
+appId: com.lyriccord.app
+productName: LyricCord
+files:
+  - "dist/**/*"
+  - "*.html"
+directories:
+  output: release
+win:
+  target: portable
+  sign: false
+asar: false
