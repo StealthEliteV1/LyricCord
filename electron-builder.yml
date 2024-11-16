@@ -3,9 +3,12 @@ productName: LyricCord
 files:
   - "dist/**/*"
   - "*.html"
+  - "icons/*"
 directories:
   output: release
 win:
   target: portable
   sign: false
+  icon: "icons/icon.ico"
 asar: false
+forceCodeSigning: false

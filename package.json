@@ -31,11 +31,13 @@
     "files": [
       "dist/**/*",
       "index.html",
-      "config.html"
+      "config.html",
+      "icons/*"
     ],
     "win": {
       "target": "portable",
-      "sign": null
+      "sign": null,
+      "icon": "icons/icon.ico"
     },
     "mac": {
       "target": "dmg"

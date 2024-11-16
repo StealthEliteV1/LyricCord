@@ -25,6 +25,8 @@ function createConfigWindow() {
     configWindow = new BrowserWindow({
         width: 600,
         height: 600,
+        autoHideMenuBar: true,
+        icon: path.join(__dirname, '..', 'icons', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -41,6 +43,8 @@ function createMainWindow() {
     mainWindow = new BrowserWindow({
         width: 800,
         height: 800,
+        autoHideMenuBar: true,
+        icon: path.join(__dirname, '..', 'icons', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
