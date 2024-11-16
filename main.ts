@@ -6,6 +6,8 @@ import Store from 'electron-store';
 interface StoreSchema {
     discordToken: string;
     geniusApiKey: string;
+    emojiId: string;
+    emojiName: string;
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -17,7 +19,9 @@ const store = new Store<StoreSchema>({
     encryptionKey: 'lyriccord-secure-key',
     defaults: {
         discordToken: '',
-        geniusApiKey: ''
+        geniusApiKey: '',
+        emojiId: '816084171427807233',  // Default emoji ID
+        emojiName: 'MusicVisualizer'     // Default emoji name
     }
 });
 
@@ -91,7 +95,9 @@ app.on('activate', () => {
 ipcMain.on('get-config', (event) => {
     event.reply('config-data', {
         discordToken: store.get('discordToken'),
-        geniusApiKey: store.get('geniusApiKey')
+        geniusApiKey: store.get('geniusApiKey'),
+        emojiId: store.get('emojiId'),
+        emojiName: store.get('emojiName')
     });
 });
 
@@ -99,6 +105,10 @@ ipcMain.on('save-config', (event, config) => {
     try {
         store.set('discordToken', config.discordToken);
         store.set('geniusApiKey', config.geniusApiKey);
+        if (config.emojiId && config.emojiName) {
+            store.set('emojiId', config.emojiId);
+            store.set('emojiName', config.emojiName);
+        }
         event.reply('config-status', {
             success: true,
             message: 'Configuration saved successfully!'
@@ -107,6 +117,25 @@ ipcMain.on('save-config', (event, config) => {
         event.reply('config-status', {
             success: false,
             message: error?.message || 'Failed to save configuration'
+        });
+    }
+});
+
+// Handle emoji updates from the main window
+ipcMain.on('update-emoji', (event, config) => {
+    try {
+        if (config.emojiId && config.emojiName) {
+            store.set('emojiId', config.emojiId);
+            store.set('emojiName', config.emojiName);
+            event.reply('updater-status', {
+                success: true,
+                message: 'Emoji settings updated! Restart status updater to apply changes.'
+            });
+        }
+    } catch (error: any) {
+        event.reply('updater-status', {
+            success: false,
+            message: error?.message || 'Failed to update emoji settings'
         });
     }
 });
@@ -144,6 +173,8 @@ ipcMain.on('start-updater', (event, config) => {
             ...config,
             discordToken: store.get('discordToken'),
             geniusApiKey: store.get('geniusApiKey'),
+            emojiId: store.get('emojiId'),
+            emojiName: store.get('emojiName'),
             onLyricsLoaded: (lyrics: string[]) => {
                 if (mainWindow) {
                     mainWindow.webContents.send('lyrics-loaded', lyrics);

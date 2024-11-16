@@ -5,6 +5,8 @@ import { getLyrics } from 'genius-lyrics-api';
 interface StatusUpdaterConfig {
     geniusApiKey: string;
     discordToken: string;
+    emojiId: string;
+    emojiName: string;
     artist: string;
     title: string;
     updateInterval?: number;
@@ -18,6 +20,8 @@ export class StatusUpdater {
     private readonly updateInterval: number;
     private readonly geniusApiKey: string;
     private readonly discordToken: string;
+    private readonly emojiId: string;
+    private readonly emojiName: string;
     private currentLyrics: string[] = [];
     private updateIntervalId?: NodeJS.Timeout;
     private readonly artist: string;
@@ -28,6 +32,8 @@ export class StatusUpdater {
     constructor(config: StatusUpdaterConfig) {
         this.geniusApiKey = config.geniusApiKey;
         this.discordToken = config.discordToken;
+        this.emojiId = config.emojiId;
+        this.emojiName = config.emojiName;
         this.artist = config.artist;
         this.title = config.title;
         this.updateInterval = config.updateInterval || 10000;
@@ -120,8 +126,8 @@ export class StatusUpdater {
                 status: { value: "online" },
                 customStatus: {
                     text: currentLyric,
-                    emojiId: 816084171427807233n,
-                    emojiName: "MusicVisualizer",
+                    emojiId: BigInt(this.emojiId),
+                    emojiName: this.emojiName,
                     expiresAtMs: 0n,
                 },
             },
