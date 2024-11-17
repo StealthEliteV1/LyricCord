@@ -9,7 +9,7 @@ LyricCord is a desktop application that lets you display song lyrics in your Dis
 ![LyricCord Demo](https://i.imgur.com/IZs2hA1.gif)
 
 ### Download & Install
-Download the latest version from the [Releases](https://github.com/YOUR_USERNAME/LyricCord/releases) page and run the application.
+Download the latest version from the [Releases](https://github.com/StealthEliteV1/LyricCord/releases) page and run the application.
 
 ### How to Use
 1. Run LyricCord
