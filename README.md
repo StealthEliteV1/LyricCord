@@ -120,7 +120,7 @@ The built application will be available in the `release` directory.
 - **NEVER** share your Discord token
 - **NEVER** enter your token on any other application
 - Keep your API keys private
-- LyricCord stores tokens securely using encryption
+- LyricCord stores your keys locally and doesn't transmit them
 - Be aware that using this application carries risks
 
 ## Legal Disclaimer
