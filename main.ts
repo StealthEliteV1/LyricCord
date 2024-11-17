@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { StatusUpdater } from './LyricCord';
 import Store from 'electron-store';
+import * as crypto from 'crypto';
 
 interface StoreSchema {
     discordToken: string;
@@ -14,9 +15,25 @@ let mainWindow: BrowserWindow | null = null;
 let configWindow: BrowserWindow | null = null;
 let statusUpdater: StatusUpdater | null = null;
 
-// Initialize electron store
+// Generate a unique encryption key for this installation
+function getOrCreateEncryptionKey(): string {
+    const keyPath = path.join(app.getPath('userData'), '.encryption-key');
+    let encryptionKey: string;
+    
+    try {
+        encryptionKey = require('fs').readFileSync(keyPath, 'utf8');
+    } catch {
+        // Generate a new key if none exists
+        encryptionKey = crypto.randomBytes(32).toString('hex');
+        require('fs').writeFileSync(keyPath, encryptionKey);
+    }
+    
+    return encryptionKey;
+}
+
+// Initialize electron store with encryption
 const store = new Store<StoreSchema>({
-    encryptionKey: 'lyriccord-secure-key',
+    encryptionKey: getOrCreateEncryptionKey(),
     defaults: {
         discordToken: '',
         geniusApiKey: '',
