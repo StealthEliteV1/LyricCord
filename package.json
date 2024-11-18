@@ -5,7 +5,7 @@
     "genius-lyrics-api": "^3.2.1"
   },
   "name": "lyriccord",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/main.js",
   "devDependencies": {
     "@types/electron": "^1.4.38",
