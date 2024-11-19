@@ -2,10 +2,10 @@
   "dependencies": {
     "discord-protos": "^1.0.5",
     "electron-store": "^8.1.0",
-    "genius-lyrics-api": "^3.2.1"
+    "lyrics-finder": "^21.7.0"
   },
   "name": "lyriccord",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "main": "dist/main.js",
   "devDependencies": {
     "@types/electron": "^1.4.38",

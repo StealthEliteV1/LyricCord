@@ -90,13 +90,6 @@
                     Reload (F5) → Filter "api" → Check request headers for "authorization"
                 </div>
             </div>
-            <div class="form-group">
-                <label for="geniusApiKey">Genius API Key:</label>
-                <input type="password" id="geniusApiKey" required>
-                <div class="help-text">
-                    Get your API key from: <a href="https://genius.com/api-clients" target="_blank">genius.com/api-clients</a>
-                </div>
-            </div>
             <button type="submit">Save Configuration</button>
             <button type="button" id="skipBtn" class="secondary">Skip (Use Existing Config)</button>
         </form>
@@ -112,7 +105,6 @@
         ipcRenderer.on('config-data', (event, config) => {
             if (config) {
                 document.getElementById('discordToken').value = config.discordToken || '';
-                document.getElementById('geniusApiKey').value = config.geniusApiKey || '';
             }
         });
 
@@ -120,8 +112,7 @@
             e.preventDefault();
             
             const config = {
-                discordToken: document.getElementById('discordToken').value,
-                geniusApiKey: document.getElementById('geniusApiKey').value
+                discordToken: document.getElementById('discordToken').value
             };
 
             ipcRenderer.send('save-config', config);

@@ -11,10 +11,11 @@
     "rootDir": "./",
     "resolveJsonModule": true,
     "sourceMap": true,
-    "allowJs": true
+    "allowJs": true,
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
   "include": [
-    "*.ts"
+    "**/*.ts"
   ],
   "exclude": [
     "node_modules",

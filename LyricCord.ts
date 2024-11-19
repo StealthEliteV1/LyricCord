@@ -1,12 +1,10 @@
 import { PreloadedUserSettings } from 'discord-protos';
-// @ts-ignore
-import { getLyrics } from 'genius-lyrics-api';
+import lyricsFinder from 'lyrics-finder';
 
 interface StatusUpdaterConfig {
-    geniusApiKey: string;
     discordToken: string;
-    emojiId: string;
-    emojiName: string;
+    emojiId?: string;
+    emojiName?: string;
     artist: string;
     title: string;
     updateInterval?: number;
@@ -18,10 +16,9 @@ export class StatusUpdater {
     private currentLyricIndex: number = 0;
     private lastUpdateTime: number = 0;
     private readonly updateInterval: number;
-    private readonly geniusApiKey: string;
     private readonly discordToken: string;
-    private readonly emojiId: string;
-    private readonly emojiName: string;
+    private readonly emojiId?: string;
+    private readonly emojiName?: string;
     private currentLyrics: string[] = [];
     private updateIntervalId?: NodeJS.Timeout;
     private readonly artist: string;
@@ -30,7 +27,6 @@ export class StatusUpdater {
     private readonly onStatusUpdate?: (lyric: string) => void;
 
     constructor(config: StatusUpdaterConfig) {
-        this.geniusApiKey = config.geniusApiKey;
         this.discordToken = config.discordToken;
         this.emojiId = config.emojiId;
         this.emojiName = config.emojiName;
@@ -87,16 +83,9 @@ export class StatusUpdater {
     }
 
     private async fetchLyrics(title: string, artist: string): Promise<string | null> {
-        const options = {
-            apiKey: this.geniusApiKey,
-            title: title,
-            artist: artist,
-            optimizeQuery: true
-        };
-
         try {
-            const lyrics = await getLyrics(options);
-            return lyrics;
+            const lyrics = await lyricsFinder(artist, title);
+            return lyrics || null;
         } catch (error) {
             console.error("Error fetching lyrics:", error);
             return null;
@@ -121,15 +110,21 @@ export class StatusUpdater {
             this.onStatusUpdate(currentLyric);
         }
 
+        const customStatus = {
+            text: currentLyric,
+            expiresAtMs: 0n,
+        } as any;
+
+        // Only add emoji if both ID and name are provided
+        if (this.emojiId && this.emojiName) {
+            customStatus.emojiId = BigInt(this.emojiId);
+            customStatus.emojiName = this.emojiName;
+        }
+
         const encoded = PreloadedUserSettings.toBase64({
             status: {
                 status: { value: "online" },
-                customStatus: {
-                    text: currentLyric,
-                    emojiId: BigInt(this.emojiId),
-                    emojiName: this.emojiName,
-                    expiresAtMs: 0n,
-                },
+                customStatus,
             },
         });
 

@@ -6,9 +6,8 @@ import * as crypto from 'crypto';
 
 interface StoreSchema {
     discordToken: string;
-    geniusApiKey: string;
-    emojiId: string;
-    emojiName: string;
+    emojiId?: string;
+    emojiName?: string;
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -35,10 +34,7 @@ function getOrCreateEncryptionKey(): string {
 const store = new Store<StoreSchema>({
     encryptionKey: getOrCreateEncryptionKey(),
     defaults: {
-        discordToken: '',
-        geniusApiKey: '',
-        emojiId: '816084171427807233',  // Default emoji ID
-        emojiName: 'MusicVisualizer'     // Default emoji name
+        discordToken: ''
     }
 });
 
@@ -80,8 +76,7 @@ function createMainWindow() {
 
 function checkConfig(): boolean {
     const token = store.get('discordToken');
-    const apiKey = store.get('geniusApiKey');
-    return token !== '' && apiKey !== '';
+    return token !== '';
 }
 
 app.whenReady().then(() => {
@@ -112,7 +107,6 @@ app.on('activate', () => {
 ipcMain.on('get-config', (event) => {
     event.reply('config-data', {
         discordToken: store.get('discordToken'),
-        geniusApiKey: store.get('geniusApiKey'),
         emojiId: store.get('emojiId'),
         emojiName: store.get('emojiName')
     });
@@ -121,7 +115,6 @@ ipcMain.on('get-config', (event) => {
 ipcMain.on('save-config', (event, config) => {
     try {
         store.set('discordToken', config.discordToken);
-        store.set('geniusApiKey', config.geniusApiKey);
         if (config.emojiId && config.emojiName) {
             store.set('emojiId', config.emojiId);
             store.set('emojiName', config.emojiName);
@@ -146,7 +139,7 @@ ipcMain.on('update-emoji', (event, config) => {
             store.set('emojiName', config.emojiName);
             event.reply('updater-status', {
                 success: true,
-                message: 'Emoji settings updated! Restart status updater to apply changes.'
+                message: 'Emoji settings updated!'
             });
         }
     } catch (error: any) {
@@ -185,13 +178,15 @@ ipcMain.on('start-updater', (event, config) => {
             statusUpdater.stop();
         }
         
-        // Merge saved API keys with song configuration
+        const emojiId = store.get('emojiId');
+        const emojiName = store.get('emojiName');
+        
+        // Merge saved config with song configuration
         const fullConfig = {
             ...config,
             discordToken: store.get('discordToken'),
-            geniusApiKey: store.get('geniusApiKey'),
-            emojiId: store.get('emojiId'),
-            emojiName: store.get('emojiName'),
+            emojiId: emojiId || '',  // Provide empty string if no emoji set
+            emojiName: emojiName || '', // Provide empty string if no emoji set
             onLyricsLoaded: (lyrics: string[]) => {
                 if (mainWindow) {
                     mainWindow.webContents.send('lyrics-loaded', lyrics);

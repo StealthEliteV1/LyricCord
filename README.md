@@ -7,6 +7,7 @@
 LyricCord is a desktop application that lets you display song lyrics in your Discord status! Watch as your status dynamically cycles through the lyrics of your favorite songs.
 
 ![LyricCord Demo](https://i.imgur.com/IZs2hA1.gif)
+![LyricCord Demo](https://i.imgur.com/VRPPJ60.gif)
 
 ### Download & Install
 Download the latest version from the [Releases](https://github.com/StealthEliteV1/LyricCord/releases) page and run the application.
@@ -32,13 +33,6 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 3. Go to the "Network" tab
 4. Look for your token in the request headers
 5. Copy it and paste it into LyricCord
-
-#### Genius API Key
-1. Go to [Genius API Clients](https://genius.com/api-clients)
-2. Create an account if you don't have one
-3. Create a new API Client
-4. Copy the Client Access Token
-5. Paste it into LyricCord
 
 ### Features
 - 🎵 Works with any song available on Genius
