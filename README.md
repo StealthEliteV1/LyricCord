@@ -16,7 +16,6 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 1. Run LyricCord
 2. Click "Update API Keys" to set up:
    - Discord Token (for updating your status)
-   - Genius API Key (for fetching lyrics)
 3. Enter song details:
    - Artist name
    - Song title
