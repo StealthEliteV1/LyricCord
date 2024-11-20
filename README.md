@@ -16,6 +16,7 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 1. Run LyricCord
 2. Click "Update API Keys" to set up:
    - Discord Token (for updating your status)
+   - Genius API Key (optional, used as fallback if Google lyrics aren't found)
 3. Enter song details:
    - Artist name
    - Song title
@@ -32,6 +33,14 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 3. Go to the "Network" tab
 4. Look for your token in the request headers
 5. Copy it and paste it into LyricCord
+
+#### Genius API Key (Optional)
+1. Visit [Genius API Clients](https://genius.com/api-clients)
+2. Sign in or create a Genius account
+3. Create a new API Client
+4. Fill in the required information (name, app website, etc.)
+5. Copy the generated Client Access Token
+6. Paste it into LyricCord's Genius API Key field
 
 ### Features
 - 🎵 Works with any song available on Genius
