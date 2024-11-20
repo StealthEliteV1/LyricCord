@@ -8,6 +8,7 @@ interface StoreSchema {
     discordToken: string;
     emojiId?: string;
     emojiName?: string;
+    geniusApiKey?: string;
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -108,13 +109,17 @@ ipcMain.on('get-config', (event) => {
     event.reply('config-data', {
         discordToken: store.get('discordToken'),
         emojiId: store.get('emojiId'),
-        emojiName: store.get('emojiName')
+        emojiName: store.get('emojiName'),
+        geniusApiKey: store.get('geniusApiKey')
     });
 });
 
 ipcMain.on('save-config', (event, config) => {
     try {
         store.set('discordToken', config.discordToken);
+        if (config.geniusApiKey) {
+            store.set('geniusApiKey', config.geniusApiKey);
+        }
         if (config.emojiId && config.emojiName) {
             store.set('emojiId', config.emojiId);
             store.set('emojiName', config.emojiName);
@@ -180,6 +185,7 @@ ipcMain.on('start-updater', (event, config) => {
         
         const emojiId = store.get('emojiId');
         const emojiName = store.get('emojiName');
+        const geniusApiKey = store.get('geniusApiKey');
         
         // Merge saved config with song configuration
         const fullConfig = {
@@ -187,6 +193,7 @@ ipcMain.on('start-updater', (event, config) => {
             discordToken: store.get('discordToken'),
             emojiId: emojiId || '',  // Provide empty string if no emoji set
             emojiName: emojiName || '', // Provide empty string if no emoji set
+            geniusApiKey: geniusApiKey || '', // Provide empty string if no Genius API key set
             onLyricsLoaded: (lyrics: string[]) => {
                 if (mainWindow) {
                     mainWindow.webContents.send('lyrics-loaded', lyrics);

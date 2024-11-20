@@ -30,7 +30,8 @@
             margin-bottom: 5px;
             color: #666;
         }
-        input[type="password"] {
+        input[type="password"],
+        input[type="text"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -76,6 +77,14 @@
             color: #666;
             margin-top: 5px;
         }
+        .external-link {
+            color: #5865F2;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .external-link:hover {
+            color: #4752C4;
+        }
     </style>
 </head>
 <body>
@@ -90,6 +99,14 @@
                     Reload (F5) → Filter "api" → Check request headers for "authorization"
                 </div>
             </div>
+            <div class="form-group">
+                <label for="geniusApiKey">Genius API Key (Optional):</label>
+                <input type="password" id="geniusApiKey">
+                <div class="help-text">
+                    Optional: Will be used as fallback if Google lyrics aren't found. Get your API key from 
+                    <span class="external-link" id="geniusLink">Genius API Clients</span>
+                </div>
+            </div>
             <button type="submit">Save Configuration</button>
             <button type="button" id="skipBtn" class="secondary">Skip (Use Existing Config)</button>
         </form>
@@ -97,7 +114,13 @@
     </div>
 
     <script>
-        const { ipcRenderer } = require('electron');
+        const { ipcRenderer, shell } = require('electron');
+
+        // Handle external link
+        document.getElementById('geniusLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            shell.openExternal('https://genius.com/api-clients');
+        });
 
         // Load existing config if available
         ipcRenderer.send('get-config');
@@ -105,6 +128,7 @@
         ipcRenderer.on('config-data', (event, config) => {
             if (config) {
                 document.getElementById('discordToken').value = config.discordToken || '';
+                document.getElementById('geniusApiKey').value = config.geniusApiKey || '';
             }
         });
 
@@ -112,7 +136,8 @@
             e.preventDefault();
             
             const config = {
-                discordToken: document.getElementById('discordToken').value
+                discordToken: document.getElementById('discordToken').value,
+                geniusApiKey: document.getElementById('geniusApiKey').value
             };
 
             ipcRenderer.send('save-config', config);

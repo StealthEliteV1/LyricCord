@@ -1,5 +1,6 @@
 import { PreloadedUserSettings } from 'discord-protos';
 import lyricsFinder from 'lyrics-finder';
+import { Client as GeniusClient } from 'genius-lyrics';
 
 interface StatusUpdaterConfig {
     discordToken: string;
@@ -10,6 +11,7 @@ interface StatusUpdaterConfig {
     updateInterval?: number;
     onLyricsLoaded?: (lyrics: string[]) => void;
     onStatusUpdate?: (lyric: string) => void;
+    geniusApiKey?: string;
 }
 
 export class StatusUpdater {
@@ -25,6 +27,7 @@ export class StatusUpdater {
     private readonly title: string;
     private readonly onLyricsLoaded?: (lyrics: string[]) => void;
     private readonly onStatusUpdate?: (lyric: string) => void;
+    private readonly geniusApiKey?: string;
 
     constructor(config: StatusUpdaterConfig) {
         this.discordToken = config.discordToken;
@@ -35,6 +38,7 @@ export class StatusUpdater {
         this.updateInterval = config.updateInterval || 10000;
         this.onLyricsLoaded = config.onLyricsLoaded;
         this.onStatusUpdate = config.onStatusUpdate;
+        this.geniusApiKey = config.geniusApiKey;
         this.fetchAndSetLyrics();
     }
 
@@ -46,21 +50,85 @@ export class StatusUpdater {
     }
 
     private async fetchAndSetLyrics(): Promise<void> {
-        const lyrics = await this.fetchLyrics(this.title, this.artist);
-        if (lyrics) {
-            this.currentLyrics = this.splitLyrics(lyrics);
-            console.log("Lyrics loaded:", this.currentLyrics);
-            if (this.onLyricsLoaded) {
-                this.onLyricsLoaded(this.currentLyrics);
+        try {
+            // Try Google lyrics first
+            let lyrics = await this.fetchGoogleLyrics();
+            
+            // If Google fails and we have a Genius API key, try Genius
+            if (!lyrics && this.geniusApiKey) {
+                console.log("Google lyrics not found, trying Genius...");
+                lyrics = await this.fetchGeniusLyrics();
             }
-            this.startPeriodicUpdate();
-        } else {
-            throw new Error("Failed to fetch lyrics");
+
+            if (lyrics) {
+                this.currentLyrics = this.splitLyrics(lyrics);
+                console.log("Lyrics loaded:", this.currentLyrics);
+                
+                // Make sure we call onLyricsLoaded with the processed lyrics
+                if (this.onLyricsLoaded && this.currentLyrics.length > 0) {
+                    this.onLyricsLoaded(this.currentLyrics);
+                }
+                
+                this.startPeriodicUpdate();
+            } else {
+                throw new Error("Failed to fetch lyrics from both Google and Genius");
+            }
+        } catch (error) {
+            console.error("Error in fetchAndSetLyrics:", error);
+            throw error;
+        }
+    }
+
+    private async fetchGeniusLyrics(): Promise<string | null> {
+        try {
+            if (!this.geniusApiKey) return null;
+            
+            const genius = new GeniusClient(this.geniusApiKey);
+            const searches = await genius.songs.search(`${this.artist} ${this.title}`);
+            
+            if (searches.length > 0) {
+                const lyrics = await searches[0].lyrics();
+                if (lyrics) {
+                    // Clean up Genius lyrics
+                    return lyrics
+                        .replace(/\[.*?\]/g, '') // Remove [Verse], [Chorus], etc.
+                        .replace(/\n\n+/g, '\n') // Replace multiple newlines with single
+                        .replace(/^[\n\s]+|[\n\s]+$/g, '') // Trim start and end
+                        .replace(/You might also like/g, '') // Remove "You might also like"
+                        .split('\n')
+                        .filter(line => 
+                            line.trim() !== '' && 
+                            !line.includes('Embed') &&
+                            !line.includes('See') &&
+                            !line.includes('Lyrics')
+                        )
+                        .join('\n');
+                }
+            }
+            return null;
+        } catch (error) {
+            console.error("Error fetching Genius lyrics:", error);
+            return null;
+        }
+    }
+
+    private async fetchGoogleLyrics(): Promise<string | null> {
+        try {
+            const lyrics = await lyricsFinder(this.artist, this.title);
+            return lyrics || null;
+        } catch (error) {
+            console.error("Error fetching Google lyrics:", error);
+            return null;
         }
     }
 
     private splitLyrics(lyrics: string): string[] {
+        if (!lyrics) return [];
+        
         return lyrics.split('\n').flatMap(line => {
+            // Skip empty lines
+            if (!line.trim()) return [];
+            
             const words = line.split(' ');
             const lines: string[] = [];
             let currentLine = '';
@@ -75,21 +143,15 @@ export class StatusUpdater {
             }
             if (currentLine) lines.push(currentLine);
             return lines;
-        });
+        }).filter(line => line.trim() !== ''); // Remove any empty lines
     }
 
     private startPeriodicUpdate(): void {
+        // Start the interval
         this.updateIntervalId = setInterval(() => this.updateDiscordStatus(), this.updateInterval);
-    }
-
-    private async fetchLyrics(title: string, artist: string): Promise<string | null> {
-        try {
-            const lyrics = await lyricsFinder(artist, title);
-            return lyrics || null;
-        } catch (error) {
-            console.error("Error fetching lyrics:", error);
-            return null;
-        }
+        
+        // Trigger first update immediately
+        this.updateDiscordStatus();
     }
 
     private async updateDiscordStatus(): Promise<void> {
@@ -98,14 +160,15 @@ export class StatusUpdater {
             return;
         }
 
-        const currentLyric = this.currentLyrics[this.currentLyricIndex];
-        this.currentLyricIndex = (this.currentLyricIndex + 1) % this.currentLyrics.length;
-
-        if (!currentLyric) {
-            console.error("No lyric available for update");
+        if (this.currentLyrics.length === 0) {
+            console.error("No lyrics available for update");
             return;
         }
 
+        const currentLyric = this.currentLyrics[this.currentLyricIndex];
+        this.currentLyricIndex = (this.currentLyricIndex + 1) % this.currentLyrics.length;
+
+        // Make sure we call onStatusUpdate with the current lyric
         if (this.onStatusUpdate) {
             this.onStatusUpdate(currentLyric);
         }
