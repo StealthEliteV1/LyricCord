@@ -31,7 +31,8 @@
             color: #666;
         }
         input[type="text"],
-        input[type="number"] {
+        input[type="number"],
+        select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -209,6 +210,16 @@
                     <input type="text" id="modalEmojiName" placeholder="e.g., MusicVisualizer">
                     <div class="help-text">The name shown in Discord's emoji picker</div>
                 </div>
+                <div class="form-group">
+                    <label for="modalDiscordStatus">Discord Status:</label>
+                    <select id="modalDiscordStatus">
+                        <option value="online">Online</option>
+                        <option value="dnd">Do Not Disturb</option>
+                        <option value="idle">Idle</option>
+                        <option value="invisible">Invisible</option>
+                    </select>
+                    <div class="help-text">Your Discord status appearance</div>
+                </div>
                 <button type="submit">Save Changes</button>
             </form>
         </div>
@@ -242,7 +253,8 @@
             e.preventDefault();
             const emojiConfig = {
                 emojiId: document.getElementById('modalEmojiId').value,
-                emojiName: document.getElementById('modalEmojiName').value
+                emojiName: document.getElementById('modalEmojiName').value,
+                discordStatus: document.getElementById('modalDiscordStatus').value
             };
             ipcRenderer.send('update-emoji', emojiConfig);
             modal.style.display = 'none';
@@ -286,6 +298,7 @@
             if (config) {
                 document.getElementById('modalEmojiId').value = config.emojiId || '';
                 document.getElementById('modalEmojiName').value = config.emojiName || '';
+                document.getElementById('modalDiscordStatus').value = config.discordStatus || 'online';
             }
         });
 

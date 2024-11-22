@@ -8,6 +8,7 @@ interface StoreSchema {
     discordToken: string;
     emojiId?: string;
     emojiName?: string;
+    discordStatus?: string;
     geniusApiKey?: string;
 }
 
@@ -35,7 +36,8 @@ function getOrCreateEncryptionKey(): string {
 const store = new Store<StoreSchema>({
     encryptionKey: getOrCreateEncryptionKey(),
     defaults: {
-        discordToken: ''
+        discordToken: '',
+        discordStatus: 'online'
     }
 });
 
@@ -110,6 +112,7 @@ ipcMain.on('get-config', (event) => {
         discordToken: store.get('discordToken'),
         emojiId: store.get('emojiId'),
         emojiName: store.get('emojiName'),
+        discordStatus: store.get('discordStatus'),
         geniusApiKey: store.get('geniusApiKey')
     });
 });
@@ -142,15 +145,18 @@ ipcMain.on('update-emoji', (event, config) => {
         if (config.emojiId && config.emojiName) {
             store.set('emojiId', config.emojiId);
             store.set('emojiName', config.emojiName);
-            event.reply('updater-status', {
-                success: true,
-                message: 'Emoji settings updated!'
-            });
         }
+        if (config.discordStatus) {
+            store.set('discordStatus', config.discordStatus);
+        }
+        event.reply('updater-status', {
+            success: true,
+            message: 'Settings updated successfully!'
+        });
     } catch (error: any) {
         event.reply('updater-status', {
             success: false,
-            message: error?.message || 'Failed to update emoji settings'
+            message: error?.message || 'Failed to update settings'
         });
     }
 });
@@ -186,6 +192,7 @@ ipcMain.on('start-updater', (event, config) => {
         const emojiId = store.get('emojiId');
         const emojiName = store.get('emojiName');
         const geniusApiKey = store.get('geniusApiKey');
+        const discordStatus = store.get('discordStatus');
         
         // Merge saved config with song configuration
         const fullConfig = {
@@ -193,6 +200,7 @@ ipcMain.on('start-updater', (event, config) => {
             discordToken: store.get('discordToken'),
             emojiId: emojiId || '',  // Provide empty string if no emoji set
             emojiName: emojiName || '', // Provide empty string if no emoji set
+            discordStatus: discordStatus || 'online', // Default to online if not set
             geniusApiKey: geniusApiKey || '', // Provide empty string if no Genius API key set
             onLyricsLoaded: (lyrics: string[]) => {
                 if (mainWindow) {

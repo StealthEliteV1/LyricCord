@@ -6,6 +6,7 @@ interface StatusUpdaterConfig {
     discordToken: string;
     emojiId?: string;
     emojiName?: string;
+    discordStatus?: string;
     artist: string;
     title: string;
     updateInterval?: number;
@@ -21,6 +22,7 @@ export class StatusUpdater {
     private readonly discordToken: string;
     private readonly emojiId?: string;
     private readonly emojiName?: string;
+    private readonly discordStatus: string;
     private currentLyrics: string[] = [];
     private updateIntervalId?: NodeJS.Timeout;
     private readonly artist: string;
@@ -33,6 +35,7 @@ export class StatusUpdater {
         this.discordToken = config.discordToken;
         this.emojiId = config.emojiId;
         this.emojiName = config.emojiName;
+        this.discordStatus = config.discordStatus || 'online';
         this.artist = config.artist;
         this.title = config.title;
         this.updateInterval = config.updateInterval || 10000;
@@ -186,7 +189,7 @@ export class StatusUpdater {
 
         const encoded = PreloadedUserSettings.toBase64({
             status: {
-                status: { value: "online" },
+                status: { value: this.discordStatus },
                 customStatus,
             },
         });
@@ -206,7 +209,7 @@ export class StatusUpdater {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             this.lastUpdateTime = now;
-            console.log(`Status updated to: ${currentLyric}`);
+            console.log(`Status updated to: ${currentLyric} (${this.discordStatus})`);
         } catch (error) {
             console.error("Error updating Discord status:", error);
         }
