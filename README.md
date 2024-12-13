@@ -28,11 +28,20 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 
 #### Discord Token
 **⚠️ WARNING: Sharing or exposing your token can lead to account theft. Never share your token with anyone!**
-1. Open Discord in your browser
-2. Press F12 to open Developer Tools
-3. Go to the "Network" tab
-4. Look for your token in the request headers
-5. Copy it and paste it into LyricCord
+1. Open Discord in your browser (discord.com/app)
+2. Press F12 to open Developer Tools (or right-click anywhere and select "Inspect")
+3. Go to the "Network" tab in Developer Tools
+4. In the Network tab, type "api" in the filter box at the top
+5. Click on any request that starts with "science" or "track"
+6. In the request details, look for the "Request Headers" section
+7. Find the "authorization" header - the value is your Discord token
+8. Copy the token (it's a long string of random letters and numbers)
+9. Paste it into LyricCord's Discord Token field
+
+**Note**: If you don't see any requests:
+- Try refreshing the Discord page (F5)
+- Make sure the "Preserve log" checkbox is enabled in the Network tab
+- Try sending a message or interacting with Discord to generate new requests
 
 #### Genius API Key (Optional)
 1. Visit [Genius API Clients](https://genius.com/api-clients)
