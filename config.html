@@ -1,89 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>LyricCord Configuration</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        :root {
+            --bg-primary: #36393f;
+            --bg-secondary: #2f3136;
+            --bg-tertiary: #202225;
+            --bg-input: #40444b;
+            --text-normal: #dcddde;
+            --text-muted: #72767d;
+            --text-white: #ffffff;
+            --brand: #5865f2;
+            --brand-hover: #4752c4;
+            --success: #3ba55c;
+            --success-bg: rgba(59, 165, 92, 0.1);
+            --danger: #ed4245;
+            --danger-bg: rgba(237, 66, 69, 0.1);
+            --border-primary: rgba(255, 255, 255, 0.1);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: 'Whitney', 'ABC Ginto Normal', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-normal);
             margin: 0;
             padding: 20px;
-            background-color: #f0f2f5;
+            line-height: 1.5;
         }
+
         .container {
             max-width: 500px;
             margin: 0 auto;
-            background-color: white;
-            padding: 20px;
+            background: var(--bg-secondary);
+            padding: 32px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
+
         h1 {
             text-align: center;
-            color: #1a1a1a;
-            margin-bottom: 20px;
+            color: var(--text-white);
+            margin: 0 0 32px;
+            font-size: 24px;
+            position: relative;
+            padding-bottom: 16px;
         }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: var(--brand);
+        }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 24px;
         }
+
         label {
             display: block;
-            margin-bottom: 5px;
-            color: #666;
+            margin-bottom: 8px;
+            color: var(--text-white);
+            font-size: 14px;
+            font-weight: 500;
         }
-        input[type="password"],
-        input[type="text"] {
+
+        input[type="password"] {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-primary);
             border-radius: 4px;
+            color: var(--text-white);
+            font-family: monospace;
+            font-size: 14px;
             box-sizing: border-box;
         }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.25);
+        }
+
+        .help-text {
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
         button {
-            background-color: #5865F2;
-            color: white;
-            padding: 10px 20px;
+            width: 100%;
+            padding: 12px;
+            background: var(--brand);
+            color: var(--text-white);
             border: none;
             border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
         }
+
         button:hover {
-            background-color: #4752C4;
+            background: var(--brand-hover);
         }
+
         button.secondary {
-            background-color: #6c757d;
+            background: var(--bg-tertiary);
+            color: var(--text-normal);
         }
+
         button.secondary:hover {
-            background-color: #5a6268;
+            background: var(--bg-input);
         }
+
         .status {
-            margin-top: 20px;
-            padding: 10px;
+            margin-top: 16px;
+            padding: 12px;
             border-radius: 4px;
             text-align: center;
+            font-size: 14px;
         }
-        .success {
-            background-color: #e3fcef;
-            color: #1a7f4b;
+
+        .status.success {
+            background: var(--success-bg);
+            color: var(--success);
         }
-        .error {
-            background-color: #fee7e7;
-            color: #c53030;
+
+        .status.error {
+            background: var(--danger-bg);
+            color: var(--danger);
         }
-        .help-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
+
         .external-link {
-            color: #5865F2;
+            color: var(--brand);
             cursor: pointer;
             text-decoration: underline;
         }
+
         .external-link:hover {
-            color: #4752C4;
+            color: var(--brand-hover);
         }
     </style>
 </head>
@@ -119,7 +184,15 @@
         // Handle external link
         document.getElementById('geniusLink').addEventListener('click', (e) => {
             e.preventDefault();
-            shell.openExternal('https://genius.com/api-clients');
+            shell.openExternal('https://genius.com/developers');
+        });
+
+        // Also handle keyboard interaction for the link
+        document.getElementById('geniusLink').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                shell.openExternal('https://genius.com/developers');
+            }
         });
 
         // Load existing config if available

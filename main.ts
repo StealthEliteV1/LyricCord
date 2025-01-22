@@ -46,6 +46,9 @@ function createConfigWindow() {
         width: 600,
         height: 600,
         autoHideMenuBar: true,
+        resizable: false,
+        maximizable: false,
+        fullscreenable: false,
         icon: path.join(__dirname, '..', 'icons', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
@@ -64,6 +67,9 @@ function createMainWindow() {
         width: 800,
         height: 800,
         autoHideMenuBar: true,
+        resizable: false,
+        maximizable: false,
+        fullscreenable: false,
         icon: path.join(__dirname, '..', 'icons', 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
@@ -79,7 +85,9 @@ function createMainWindow() {
 
 function checkConfig(): boolean {
     const token = store.get('discordToken');
-    return token !== '';
+    const emojiId = store.get('emojiId');
+    const emojiName = store.get('emojiName');
+    return token !== '' && emojiId !== undefined && emojiName !== undefined;
 }
 
 app.whenReady().then(() => {
