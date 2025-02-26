@@ -33,6 +33,7 @@
       "dist/**/*",
       "index.html",
       "config.html",
+      "styles.css",
       "icons/*"
     ],
     "win": {

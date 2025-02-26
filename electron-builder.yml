@@ -3,6 +3,7 @@ productName: LyricCord
 files:
   - "dist/**/*"
   - "*.html"
+  - "styles.css"
   - "icons/*"
 directories:
   output: release
