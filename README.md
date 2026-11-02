@@ -16,7 +16,7 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 1. Run LyricCord
 2. Click "Update API Keys" to set up:
    - Discord Token (for updating your status)
-   - Genius API Key (optional, used as fallback if Google lyrics aren't found)
+   - Genius API Key (optional, used as fallback if LRCLIB lyrics aren't found)
 3. Enter song details:
    - Artist name
    - Song title
@@ -27,21 +27,25 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 ### Getting the Required Keys
 
 #### Discord Token
-**⚠️ WARNING: Sharing or exposing your token can lead to account theft. Never share your token with anyone!**
-1. Open Discord in your browser (discord.com/app)
-2. Press F12 to open Developer Tools (or right-click anywhere and select "Inspect")
-3. Go to the "Network" tab in Developer Tools
-4. In the Network tab, type "api" in the filter box at the top
-5. Click on any request that starts with "science" or "track"
-6. In the request details, look for the "Request Headers" section
-7. Find the "authorization" header - the value is your Discord token
-8. Copy the token (it's a long string of random letters and numbers)
-9. Paste it into LyricCord's Discord Token field
+**⚠️ WARNING: Your token gives full access to your account. Sharing or exposing it can lead to account theft. Never share your token with anyone, and never paste it anywhere except LyricCord's own Discord Token field.**
 
-**Note**: If you don't see any requests:
-- Try refreshing the Discord page (F5)
-- Make sure the "Preserve log" checkbox is enabled in the Network tab
-- Try sending a message or interacting with Discord to generate new requests
+Use **Discord in your web browser** for this — not the desktop app. The desktop app hides its DevTools, and re-enabling them to dig the token out means patching the client, which can trip Discord's tamper detection.
+
+1. Open **https://discord.com/app** in your browser and log in.
+2. Press **F12** to open Developer Tools.
+3. Go to the **Network** tab.
+4. In the filter box, type `messages` (or `science`).
+5. Interact with Discord to generate a request — send a message, or click between channels.
+6. Click one of the requests that appears in the list.
+7. Open the **Headers** section and scroll to **Request Headers**.
+8. Find the **`authorization`** header — its value is your token (a long string of letters and numbers). Copy it.
+9. Paste it into LyricCord's **Discord Token** field.
+
+**If you don't see any requests**, refresh the page (F5), enable the **Preserve log** checkbox, then interact with Discord again.
+
+**If the `authorization` header is missing**, make sure you're on the **browser** version (not the desktop app), and that the request you clicked is a real API call to `discord.com/api/...` such as `messages` or `science`.
+
+> **Note:** Your token is *not* the same as a cookie. Don't copy anything from the Cookies section — only the `authorization` request header is the token.
 
 #### Genius API Key (Optional)
 1. Visit [Genius API Clients](https://genius.com/api-clients)
@@ -52,7 +56,7 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 6. Paste it into LyricCord's Genius API Key field
 
 ### Features
-- 🎵 Works with any song available on Genius
+- 🎵 Works with any song available on LRCLIB or Genius
 - ⚡ Real-time status updates
 - 👀 Preview lyrics before updating
 - ⏱️ Customizable update speed
@@ -67,6 +71,7 @@ Download the latest version from the [Releases](https://github.com/StealthEliteV
 - Node.js
 - HTML/CSS
 - Discord API
+- LRCLIB API
 - Genius API
 
 ### Prerequisites

@@ -84,10 +84,7 @@ function createMainWindow() {
 }
 
 function checkConfig(): boolean {
-    const token = store.get('discordToken');
-    const emojiId = store.get('emojiId');
-    const emojiName = store.get('emojiName');
-    return token !== '' && emojiId !== undefined && emojiName !== undefined;
+    return store.get('discordToken') !== '';
 }
 
 app.whenReady().then(() => {
@@ -169,16 +166,27 @@ ipcMain.on('update-emoji', (event, config) => {
     }
 });
 
-ipcMain.on('skip-config', () => {
-    if (checkConfig()) {
-        configWindow?.close();
+function closeConfigWindow() {
+    configWindow?.close();
+    // The config window can be opened from an already running main window
+    if (!mainWindow) {
         createMainWindow();
+    }
+}
+
+ipcMain.on('skip-config', (event) => {
+    if (checkConfig()) {
+        closeConfigWindow();
+    } else {
+        event.reply('config-status', {
+            success: false,
+            message: 'Enter and save a Discord token first'
+        });
     }
 });
 
 ipcMain.on('config-done', () => {
-    configWindow?.close();
-    createMainWindow();
+    closeConfigWindow();
 });
 
 // Handle opening config from main window
@@ -219,14 +227,26 @@ ipcMain.on('start-updater', (event, config) => {
                 if (mainWindow) {
                     mainWindow.webContents.send('status-update', lyric);
                 }
+            },
+            onError: (message: string, fatal: boolean) => {
+                if (fatal) {
+                    statusUpdater = null;
+                }
+                if (mainWindow) {
+                    mainWindow.webContents.send('updater-status', {
+                        success: false,
+                        message,
+                        stopped: fatal
+                    });
+                }
             }
         };
-        
+
         statusUpdater = new StatusUpdater(fullConfig);
         
         event.reply('updater-status', { 
             success: true, 
-            message: 'Status updater started successfully!' 
+            message: 'Status updater started, loading lyrics...' 
         });
     } catch (error: any) {
         event.reply('updater-status', { 

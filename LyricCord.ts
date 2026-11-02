@@ -1,5 +1,4 @@
 import { PreloadedUserSettings } from 'discord-protos';
-import lyricsFinder from 'lyrics-finder';
 import { Client as GeniusClient } from 'genius-lyrics';
 
 interface StatusUpdaterConfig {
@@ -12,12 +11,12 @@ interface StatusUpdaterConfig {
     updateInterval?: number;
     onLyricsLoaded?: (lyrics: string[]) => void;
     onStatusUpdate?: (lyric: string) => void;
+    onError?: (message: string, fatal: boolean) => void;
     geniusApiKey?: string;
 }
 
 export class StatusUpdater {
     private currentLyricIndex: number = 0;
-    private lastUpdateTime: number = 0;
     private readonly updateInterval: number;
     private readonly discordToken: string;
     private readonly emojiId?: string;
@@ -29,7 +28,9 @@ export class StatusUpdater {
     private readonly title: string;
     private readonly onLyricsLoaded?: (lyrics: string[]) => void;
     private readonly onStatusUpdate?: (lyric: string) => void;
+    private readonly onError?: (message: string, fatal: boolean) => void;
     private readonly geniusApiKey?: string;
+    private stopped: boolean = false;
 
     constructor(config: StatusUpdaterConfig) {
         this.discordToken = config.discordToken;
@@ -41,11 +42,13 @@ export class StatusUpdater {
         this.updateInterval = config.updateInterval || 10000;
         this.onLyricsLoaded = config.onLyricsLoaded;
         this.onStatusUpdate = config.onStatusUpdate;
+        this.onError = config.onError;
         this.geniusApiKey = config.geniusApiKey;
         this.fetchAndSetLyrics();
     }
 
     public stop(): void {
+        this.stopped = true;
         if (this.updateIntervalId) {
             clearInterval(this.updateIntervalId);
             this.updateIntervalId = undefined;
@@ -54,14 +57,17 @@ export class StatusUpdater {
 
     private async fetchAndSetLyrics(): Promise<void> {
         try {
-            // Try Google lyrics first
-            let lyrics = await this.fetchGoogleLyrics();
-            
-            // If Google fails and we have a Genius API key, try Genius
+            // Try LRCLIB first
+            let lyrics = await this.fetchLrclibLyrics();
+
+            // If LRCLIB fails and we have a Genius API key, try Genius
             if (!lyrics && this.geniusApiKey) {
-                console.log("Google lyrics not found, trying Genius...");
+                console.log("LRCLIB lyrics not found, trying Genius...");
                 lyrics = await this.fetchGeniusLyrics();
             }
+
+            // Stopped while the lyrics were loading
+            if (this.stopped) return;
 
             if (lyrics) {
                 this.currentLyrics = this.splitLyrics(lyrics);
@@ -74,11 +80,12 @@ export class StatusUpdater {
                 
                 this.startPeriodicUpdate();
             } else {
-                throw new Error("Failed to fetch lyrics from both Google and Genius");
+                const hint = this.geniusApiKey ? '' : ' Adding a Genius API key may help.';
+                this.fail(`No lyrics found for "${this.title}" by ${this.artist}.${hint}`);
             }
         } catch (error) {
             console.error("Error in fetchAndSetLyrics:", error);
-            throw error;
+            this.fail("Failed to load lyrics");
         }
     }
 
@@ -115,14 +122,37 @@ export class StatusUpdater {
         }
     }
 
-    private async fetchGoogleLyrics(): Promise<string | null> {
+    private async fetchLrclibLyrics(): Promise<string | null> {
         try {
-            const lyrics = await lyricsFinder(this.artist, this.title);
-            return lyrics || null;
+            const params = new URLSearchParams({
+                artist_name: this.artist,
+                track_name: this.title
+            });
+            const options = {
+                headers: { 'User-Agent': 'LyricCord (https://github.com/StealthEliteV1/LyricCord)' },
+                signal: AbortSignal.timeout(15000)
+            };
+
+            const exact = await fetch(`https://lrclib.net/api/get?${params}`, options);
+            if (exact.ok) {
+                const song = await exact.json() as { plainLyrics?: string | null };
+                if (song.plainLyrics) return song.plainLyrics;
+            }
+
+            // No exact match, fall back to fuzzy search
+            const search = await fetch(`https://lrclib.net/api/search?${params}`, options);
+            if (!search.ok) return null;
+            const results = await search.json() as { plainLyrics?: string | null }[];
+            return results.find(song => song.plainLyrics)?.plainLyrics || null;
         } catch (error) {
-            console.error("Error fetching Google lyrics:", error);
+            console.error("Error fetching LRCLIB lyrics:", error);
             return null;
         }
+    }
+
+    private fail(message: string): void {
+        this.stop();
+        this.onError?.(message, true);
     }
 
     private splitLyrics(lyrics: string): string[] {
@@ -158,11 +188,6 @@ export class StatusUpdater {
     }
 
     private async updateDiscordStatus(): Promise<void> {
-        const now = Date.now();
-        if (now - this.lastUpdateTime < this.updateInterval) {
-            return;
-        }
-
         if (this.currentLyrics.length === 0) {
             console.error("No lyrics available for update");
             return;
@@ -171,18 +196,20 @@ export class StatusUpdater {
         const currentLyric = this.currentLyrics[this.currentLyricIndex];
         this.currentLyricIndex = (this.currentLyricIndex + 1) % this.currentLyrics.length;
 
-        // Make sure we call onStatusUpdate with the current lyric
-        if (this.onStatusUpdate) {
-            this.onStatusUpdate(currentLyric);
-        }
-
+        // The proto writer requires every custom status field to be set
         const customStatus = {
             text: currentLyric,
+            emojiId: 0n,
+            emojiName: '',
             expiresAtMs: 0n,
-        } as any;
+        };
 
         // Only add emoji if both ID and name are provided
         if (this.emojiId && this.emojiName) {
+            if (!/^\d+$/.test(this.emojiId)) {
+                this.fail("Emoji ID must contain only numbers");
+                return;
+            }
             customStatus.emojiId = BigInt(this.emojiId);
             customStatus.emojiName = this.emojiName;
         }
@@ -205,13 +232,23 @@ export class StatusUpdater {
 
         try {
             const response = await fetch('https://discord.com/api/v9/users/@me/settings-proto/1', options);
+            if (this.stopped) return;
+            if (response.status === 401 || response.status === 403) {
+                this.fail("Discord rejected your token. Update it under Update API Keys.");
+                return;
+            }
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            this.lastUpdateTime = now;
             console.log(`Status updated to: ${currentLyric} (${this.discordStatus})`);
+            if (this.onStatusUpdate) {
+                this.onStatusUpdate(currentLyric);
+            }
         } catch (error) {
             console.error("Error updating Discord status:", error);
+            if (!this.stopped) {
+                this.onError?.(`Could not update Discord status: ${(error as Error).message}`, false);
+            }
         }
     }
 }

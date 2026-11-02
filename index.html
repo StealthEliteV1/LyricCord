@@ -161,6 +161,9 @@
             statusDiv.textContent = response.message;
             statusDiv.className = `status ${response.success ? 'success' : 'error'}`;
             statusDiv.style.display = 'block';
+            if (response.stopped) {
+                document.getElementById('stopBtn').style.display = 'none';
+            }
         });
 
         ipcRenderer.on('config-data', (event, config) => {
@@ -188,6 +191,11 @@
             });
             
             lyricsContainer.style.display = 'block';
+
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = 'Status updater running';
+            statusDiv.className = 'status success';
+            statusDiv.style.display = 'block';
         });
 
         ipcRenderer.on('status-update', (event, currentLyric) => {
