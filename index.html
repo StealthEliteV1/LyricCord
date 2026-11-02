@@ -29,13 +29,13 @@
             </div>
             <div class="form-group">
                 <label for="updateInterval">Update Interval (ms):</label>
-                <input type="number" 
-                       id="updateInterval" 
-                       value="10000" 
-                       min="5000" 
-                       required 
+                <input type="number"
+                       id="updateInterval"
+                       value="15000"
+                       min="15000"
+                       required
                        aria-required="true"
-                       aria-description="Minimum interval is 5000ms (5 seconds)">
+                       aria-description="Minimum interval is 15000ms (15 seconds) to avoid Discord rate limits">
             </div>
             <button type="submit" aria-label="Start Status Updater">Start Status Updater</button>
         </form>

@@ -31,6 +31,11 @@ export class StatusUpdater {
     private readonly onError?: (message: string, fatal: boolean) => void;
     private readonly geniusApiKey?: string;
     private stopped: boolean = false;
+    private pausedUntil: number = 0;
+
+    // Discord heavily rate-limits the settings-proto endpoint. Updating faster
+    // than this reliably triggers HTTP 429, so clamp the interval to a safe floor.
+    public static readonly MIN_UPDATE_INTERVAL = 15000;
 
     constructor(config: StatusUpdaterConfig) {
         this.discordToken = config.discordToken;
@@ -39,7 +44,7 @@ export class StatusUpdater {
         this.discordStatus = config.discordStatus || 'online';
         this.artist = config.artist;
         this.title = config.title;
-        this.updateInterval = config.updateInterval || 10000;
+        this.updateInterval = Math.max(config.updateInterval || 15000, StatusUpdater.MIN_UPDATE_INTERVAL);
         this.onLyricsLoaded = config.onLyricsLoaded;
         this.onStatusUpdate = config.onStatusUpdate;
         this.onError = config.onError;
@@ -122,6 +127,12 @@ export class StatusUpdater {
         }
     }
 
+    // A real set of lyrics has multiple lines; reject one-line junk entries.
+    private isUsableLyrics(text?: string | null): boolean {
+        if (!text) return false;
+        return text.trim().split('\n').filter(line => line.trim() !== '').length >= 2;
+    }
+
     private async fetchLrclibLyrics(): Promise<string | null> {
         try {
             const params = new URLSearchParams({
@@ -136,14 +147,20 @@ export class StatusUpdater {
             const exact = await fetch(`https://lrclib.net/api/get?${params}`, options);
             if (exact.ok) {
                 const song = await exact.json() as { plainLyrics?: string | null };
-                if (song.plainLyrics) return song.plainLyrics;
+                // Some LRCLIB entries are junk/vandalized (e.g. a single word), so
+                // only trust an exact match that actually looks like lyrics.
+                if (this.isUsableLyrics(song.plainLyrics)) return song.plainLyrics!;
             }
 
-            // No exact match, fall back to fuzzy search
+            // No usable exact match; search and pick the richest result.
             const search = await fetch(`https://lrclib.net/api/search?${params}`, options);
             if (!search.ok) return null;
             const results = await search.json() as { plainLyrics?: string | null }[];
-            return results.find(song => song.plainLyrics)?.plainLyrics || null;
+            const best = results
+                .map(song => (song.plainLyrics || '').trim())
+                .filter(text => this.isUsableLyrics(text))
+                .sort((a, b) => b.length - a.length)[0];
+            return best || null;
         } catch (error) {
             console.error("Error fetching LRCLIB lyrics:", error);
             return null;
@@ -153,6 +170,26 @@ export class StatusUpdater {
     private fail(message: string): void {
         this.stop();
         this.onError?.(message, true);
+    }
+
+    // Discord reports how long to wait on a 429, in the JSON body (retry_after,
+    // seconds) or the Retry-After header. Fall back to one interval, capped at 60s.
+    private async getRetryAfterMs(response: Response): Promise<number> {
+        let retryMs = this.updateInterval;
+        try {
+            const body = await response.clone().json() as { retry_after?: number };
+            if (typeof body.retry_after === 'number') {
+                retryMs = body.retry_after * 1000;
+            } else {
+                const header = response.headers.get('retry-after');
+                if (header) retryMs = parseFloat(header) * 1000;
+            }
+        } catch {
+            const header = response.headers.get('retry-after');
+            if (header) retryMs = parseFloat(header) * 1000;
+        }
+        if (!(retryMs > 0)) retryMs = this.updateInterval;
+        return Math.min(retryMs, 60000);
     }
 
     private splitLyrics(lyrics: string): string[] {
@@ -193,7 +230,13 @@ export class StatusUpdater {
             return;
         }
 
-        const currentLyric = this.currentLyrics[this.currentLyricIndex];
+        // Backing off from a Discord rate limit; skip this tick.
+        if (Date.now() < this.pausedUntil) {
+            return;
+        }
+
+        const lyricIndex = this.currentLyricIndex;
+        const currentLyric = this.currentLyrics[lyricIndex];
         this.currentLyricIndex = (this.currentLyricIndex + 1) % this.currentLyrics.length;
 
         // The proto writer requires every custom status field to be set
@@ -235,6 +278,15 @@ export class StatusUpdater {
             if (this.stopped) return;
             if (response.status === 401 || response.status === 403) {
                 this.fail("Discord rejected your token. Update it under Update API Keys.");
+                return;
+            }
+            if (response.status === 429) {
+                const retryMs = await this.getRetryAfterMs(response);
+                this.pausedUntil = Date.now() + retryMs;
+                // Retry this same lyric once the pause is over, rather than skipping it.
+                this.currentLyricIndex = lyricIndex;
+                const secs = Math.ceil(retryMs / 1000);
+                this.onError?.(`Discord is rate-limiting updates; pausing ${secs}s. Use a larger update interval to avoid this.`, false);
                 return;
             }
             if (!response.ok) {

@@ -5,7 +5,7 @@
     "genius-lyrics": "^4.4.7"
   },
   "name": "lyriccord",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "main": "dist/main.js",
   "devDependencies": {
     "@types/electron": "^1.4.38",
